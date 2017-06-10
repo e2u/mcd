@@ -1,0 +1,13 @@
+# 白名单,每行一个,需要完整的地址,包括访问协议
+
+http://code.jquery.com/jquery-latest.js
+http://code.jquery.com/jquery-3.2.1.min.js
+http://code.jquery.com/jquery-migrate-3.0.0.js
+http://code.jquery.com/color/jquery.color-2.1.2.js
+http://code.jquery.com/pep/0.4.3/pep.js
+http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.js
+http://apps.bdimg.com/libs/accounting.js/0.3.2/accounting.min.js
+http://apps.bdimg.com/libs/angular-cookies/1.2.16/angular-cookies.js
+
+http://apps.bdimg.com/libs/typo.css/2.0/typo.css
+http://apps.bdimg.com/libs/animate.css/3.1.0/animate.min.css
