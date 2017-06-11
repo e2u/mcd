@@ -21,7 +21,7 @@ func NewWhiteList() *WhiteList {
 	return &WhiteList{}
 }
 
-// LoadFromFile  从文件加载白名单,在 redis 中是 Set
+// LoadFromFile  从文件加载白名单
 func (w *WhiteList) LoadFromFile(file string) error {
 	f, err := os.Open(file)
 	if err != nil {

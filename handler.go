@@ -94,12 +94,12 @@ func (c *Controller) MergeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	// 如果客户端有 If-None-Match ,且所传递的值和 etag 相同,则返回 304
 	etag := fmt.Sprintf("%x", md5.Sum(etagSource))
-	w.Header().Set("ETag", etag)
 	if r.Header.Get("If-None-Match") == etag {
 		w.WriteHeader(http.StatusNotModified)
 		return
 	}
 
+	w.Header().Set("ETag", etag)
 	for _, oc := range outputResources {
 		ocInfo := fmt.Sprintf("/*\n * MCD Info:\n * Source: %s\n * CacheAt: %s\n * Length: %d Bytes\n * MD5Hash: %x\n */\n", oc.Source, oc.CreatedAt, oc.Length, oc.MD5Hash)
 		io.Copy(w, strings.NewReader(ocInfo))
