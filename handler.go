@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/e2u/goboot"
 	"github.com/gorilla/mux"
 	"github.com/tdewolff/minify"
 	"github.com/tdewolff/minify/css"
@@ -117,7 +118,12 @@ func getResource(url string) (*cache.CacheObject, error) {
 
 		r := bytes.NewBuffer(b)
 		w := &bytes.Buffer{}
-		minifier(w, r, url)
+
+		if err := minifier(w, r, url); err != nil {
+			goboot.Log.Errorf("minifiter error: %v", err.Error())
+			return nil, err
+		}
+
 		oc := &cache.CacheObject{
 			CreatedAt: time.Now(),
 			Length:    uint64(len(w.Bytes())),
