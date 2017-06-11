@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"crypto/md5"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -10,6 +11,9 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/tdewolff/minify"
+	"github.com/tdewolff/minify/css"
+	"github.com/tdewolff/minify/js"
 	"github.com/weidewang/mcd/cache"
 )
 
@@ -102,6 +106,7 @@ func (c *Controller) MergeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// 尝试从本地缓存或远端获取资源
 func getResource(url string) (*cache.CacheObject, error) {
 
 	if oc, err := Cache.Get(url); err == nil && oc != nil {
@@ -109,11 +114,15 @@ func getResource(url string) (*cache.CacheObject, error) {
 	}
 
 	if b, err := HttpGet(url); err == nil {
+
+		r := bytes.NewBuffer(b)
+		w := &bytes.Buffer{}
+		minifier(w, r, url)
 		oc := &cache.CacheObject{
 			CreatedAt: time.Now(),
-			Length:    uint64(len(b)),
-			MD5Hash:   md5.Sum(b),
-			Object:    b,
+			Length:    uint64(len(w.Bytes())),
+			MD5Hash:   md5.Sum(w.Bytes()),
+			Object:    w.Bytes(),
 			Source:    url,
 		}
 		Cache.Set(url, oc)
@@ -121,5 +130,18 @@ func getResource(url string) (*cache.CacheObject, error) {
 	} else {
 		return nil, err
 	}
+}
 
+// 对资源进行压缩
+func minifier(w io.Writer, r io.Reader, url string) error {
+	m := minify.New()
+	switch {
+	case strings.HasSuffix(url, RcTypeJSExt):
+		return js.Minify(m, w, r, nil)
+	case strings.HasSuffix(url, RcTypeCSSExt):
+		return css.Minify(m, w, r, nil)
+	default:
+		return errors.New("unknow type")
+	}
+	return errors.New("unknow type")
 }
