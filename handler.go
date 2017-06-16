@@ -11,11 +11,11 @@ import (
 	"time"
 
 	"github.com/e2u/goboot"
+	"github.com/e2u/mcd/cache"
 	"github.com/gorilla/mux"
 	"github.com/tdewolff/minify"
 	"github.com/tdewolff/minify/css"
 	"github.com/tdewolff/minify/js"
-	"github.com/weidewang/mcd/cache"
 )
 
 // 指定的字符串是否在数组中

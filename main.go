@@ -13,9 +13,9 @@ import (
 	"time"
 
 	"github.com/e2u/goboot"
+	"github.com/e2u/mcd/cache"
 	"github.com/gorilla/mux"
 	"github.com/urfave/negroni"
-	"github.com/weidewang/mcd/cache"
 )
 
 const (
