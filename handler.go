@@ -86,10 +86,20 @@ func (c *Controller) UpdateHandler(w http.ResponseWriter, r *http.Request) {
 	var rs []string
 	for _, v := range strings.Split(r.FormValue("rc"), ",") {
 		v1 := strings.TrimSpace(v)
-		if len(v1) == 0 || isInArray(rs, v1) || !isInWhitelist(v1) {
+		if v1 == "" || isInArray(rs, v1) {
 			continue
 		}
-		rs = append(rs, v1)
+
+		if v2 := TL.GetByShort(v1); v2 != "" {
+			rs = append(rs, v2)
+			goboot.Log.Debugf("trust resource: %v", v2)
+			continue
+		}
+
+		if isInWhitelist(v1) {
+			rs = append(rs, v1)
+			continue
+		}
 	}
 	for _, r := range rs {
 		go Cache.Delete(r)
