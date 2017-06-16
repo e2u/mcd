@@ -1,4 +1,4 @@
-# MDC
+# MCD
 
 
 资源整合服务，可将多个分散在不同服务器，不同访问协议的 js,css 文件做打包输出并做缓存，用于解决浏览器引用大量 js,css 文件时过多的网络连接。
@@ -15,11 +15,11 @@
 可在配置文件中添加一个或多个信任服务器列表,存储在信任服务器中的源文件不需要一一添加白名单，同时可缩短整合请求的地址。
 
 
-信任服务器列表,可填写多个,逗号","分隔,格式为: <tag1>=<url>,<tag2>=<url2>,....
+信任服务器列表,可填写多个,逗号","分隔,格式为: `<tag1>=<url>`,`<tag2>=<url2>`,....
 
 在接口访问时可缩短源文件的路径
 
-例如: trust.server= s1=http://http://code.jquery.com/,s2=http://apps.bdimg.com/libs/typo.css/
+例如: `trust.server= s1=http://http://code.jquery.com/,s2=http://apps.bdimg.com/libs/typo.css/`
 
 在访问时,可以使用
 `http[s]://domain.com/js?rc=s1:/jquery-latest.js,s1:/jquery-3.2.1.min.js` 这样的形式进行访问
