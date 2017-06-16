@@ -1,0 +1,19 @@
+[
+    {
+        "AllowedHeaders": [
+            "*"
+        ],
+        "AllowedMethods": [
+            "*"
+        ],
+        "AllowedOrigins": [
+            "http://www.funguide.com.cn","https://abc.funguide.com.cn"
+        ],
+        "ExposedHeaders": [
+            "*"
+        ],
+        "AllowCredentials": true,
+        "IgnoreOptions": true,
+        "MaxAgeSeconds": 3000
+    }
+]

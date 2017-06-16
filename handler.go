@@ -38,7 +38,8 @@ const (
 	RcTypeCSSExt = ".css"
 )
 
-func cleanRequestResources(w http.ResponseWriter, r *http.Request) []string {
+// 处理请求的资源列表
+func processRequestResources(w http.ResponseWriter, r *http.Request) []string {
 	vars := mux.Vars(r)
 	rcType := vars["rcType"]
 
@@ -56,12 +57,27 @@ func cleanRequestResources(w http.ResponseWriter, r *http.Request) []string {
 	var rs []string
 	for _, v := range strings.Split(r.FormValue("rc"), ",") {
 		v1 := strings.TrimSpace(v)
-		if len(v1) == 0 || !strings.HasSuffix(v1, rcTypeExt) || isInArray(rs, v1) || !isInWhitelist(v1) {
+		if v1 == "" || !strings.HasSuffix(v1, rcTypeExt) || isInArray(rs, v1) {
 			continue
 		}
-		rs = append(rs, v1)
+
+		// 如果是在信任服务器中的资源
+		if v2 := TL.GetByShort(v1); v2 != "" {
+			rs = append(rs, v2)
+			goboot.Log.Debugf("trust resource: %v", v2)
+			continue
+		}
+
+		// 需要白名单验证
+		if isInWhitelist(v1) {
+			rs = append(rs, v1)
+			goboot.Log.Debugf("white resource: %v", v1)
+			continue
+		}
+
 	}
 
+	goboot.Log.Debugf("request resouces: %v", rs)
 	return rs
 }
 
@@ -81,12 +97,50 @@ func (c *Controller) UpdateHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("OK"))
 }
 
+// 处理 cors 访问控制
+// 如果请求参数中有 cors 参数,则读取 cors 配置文件对请求做处理
+// cors 配置文件也需要在白名单中
+/*
+func (c *Controller) cors(w http.ResponseWriter, r *http.Request) {
+	origin := r.Header.Get("Origin")
+	if len(origin) == 0 {
+		return
+	}
+	var varys []string
+	cross := DefaultCross()
+	func() {
+		for _, o := range cross.AllowedOrigins {
+			if origin == o {
+				w.Header().Set("Access-Control-Allow-Origin", o)
+				varys = append(varys, "Origin")
+			}
+			if o == "*" {
+				w.Header().Set("Access-Control-Allow-Origin", o)
+				return
+			}
+		}
+	}()
+
+	writeHeader := func(hs []string, header string) {
+		var s []string
+		for _, h := range hs {
+			s = append(s, h)
+		}
+		w.Header().Set(header, strings.Join(s, ","))
+	}
+
+	writeHeader(cross.AllowedHeaders, "Access-Control-Allow-Headers")
+	writeHeader(cross.AllowedMethods, "Access-Control-Allow-Methods")
+	writeHeader(varys, "Vary")
+}
+*/
+
 // 整合资源输出
 func (c *Controller) MergeHandler(w http.ResponseWriter, r *http.Request) {
 
 	var outputResources []*cache.CacheObject
 	var etagSource []byte
-	for _, rc := range cleanRequestResources(w, r) {
+	for _, rc := range processRequestResources(w, r) {
 		if oc, err := getResource(rc); err == nil {
 			outputResources = append(outputResources, oc)
 			etagSource = append(etagSource, oc.MD5Hash[:]...)

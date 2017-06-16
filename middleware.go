@@ -9,6 +9,7 @@ func headerMiddleware(w http.ResponseWriter, r *http.Request, next http.HandlerF
 	next(w, r)
 }
 
-func crossRequestMiddleware(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+func corsRequestMiddleware(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	next(w, r)
 }

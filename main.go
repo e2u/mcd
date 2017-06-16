@@ -6,8 +6,10 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"os/signal"
+	"strings"
 	"time"
 
 	"github.com/e2u/goboot"
@@ -23,9 +25,10 @@ const (
 var (
 	ListenPort int
 	RunEnv     string
-	WL         *WhiteList
-	WLModTime  time.Time
-	Cache      cache.Storager
+	WL         *WhiteList     // 白名单
+	WLModTime  time.Time      // 白名单最后更新时间
+	Cache      cache.Storager // 源文件缓存
+	TL         *TrustServer   //信任服务器列表
 )
 
 type Controller struct {
@@ -54,6 +57,23 @@ func initWhitelist() error {
 	return nil
 }
 
+// 初始化信任服务器列表
+func initTrustServerList() error {
+	TL = NewTrustServer()
+	tls := goboot.Config.MustStringArray("trust.server.list", ",")
+	for _, tl := range tls {
+		func() {
+			as := strings.Split(tl, "=")
+			u, err := url.Parse(as[1])
+			if err != nil {
+				panic(err.Error())
+			}
+			TL.Set(as[0], u)
+		}()
+	}
+	return nil
+}
+
 // 初始化函数
 func init() {
 	flag.StringVar(&RunEnv, "env", "dev", "app run env: [dev|dev-prod|prod]")
@@ -63,10 +83,12 @@ func init() {
 	goboot.Init(RunEnv)
 	goboot.OnAppStart(initWhitelist, 10)
 	goboot.OnAppStart(initCache, 20)
+	goboot.OnAppStart(initTrustServerList, 30)
 	goboot.Startup()
 }
 
 func main() {
+
 	if false {
 		return
 	}
@@ -78,11 +100,11 @@ func main() {
 	n := negroni.New()
 
 	n.Use(negroni.HandlerFunc(headerMiddleware))
-	n.Use(negroni.HandlerFunc(crossRequestMiddleware))
+	n.Use(negroni.HandlerFunc(corsRequestMiddleware))
 
 	r := mux.NewRouter()
 	r.KeepContext = false
-	r.HandleFunc("/{rcType:(?:js|css)}", c.MergeHandler).Methods("GET", "POST", "HEAD")
+	r.HandleFunc("/{rcType:(?:js|css)}", c.MergeHandler).Methods("GET", "POST", "HEAD", "OPTIONS")
 	r.HandleFunc("/update", c.UpdateHandler).Methods("GET", "POST")
 
 	n.UseHandler(r)
