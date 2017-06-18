@@ -106,6 +106,7 @@ func main() {
 	r.KeepContext = false
 	r.HandleFunc("/{rcType:(?:js|css)}", c.MergeHandler).Methods("GET", "POST", "HEAD", "OPTIONS")
 	r.HandleFunc("/update", c.UpdateHandler).Methods("GET", "POST")
+	r.HandleFunc("/tags", c.Tags)
 
 	n.UseHandler(r)
 

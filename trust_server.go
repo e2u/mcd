@@ -71,3 +71,13 @@ func (t *TrustServer) GetByShort(su string) string {
 
 	return ""
 }
+
+func (t *TrustServer) List() map[string]string {
+	t.RLock()
+	defer t.RUnlock()
+	r := make(map[string]string)
+	for k, v := range t.m {
+		r[k] = v.String()
+	}
+	return r
+}

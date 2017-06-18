@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"crypto/md5"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -105,6 +106,16 @@ func (c *Controller) UpdateHandler(w http.ResponseWriter, r *http.Request) {
 		go Cache.Delete(r)
 	}
 	w.Write([]byte("OK"))
+}
+
+// 列出短服务器 tag
+func (c *Controller) Tags(w http.ResponseWriter, r *http.Request) {
+	b, err := json.Marshal(TL.List())
+	if err != nil {
+		io.Copy(w, strings.NewReader(err.Error()))
+		return
+	}
+	io.Copy(w, bytes.NewReader(b))
 }
 
 // 处理 cors 访问控制
