@@ -1,7 +1,7 @@
 # MCD
 
 
-资源整合服务，可将多个分散在不同服务器，不同访问协议的 js,css 文件做打包输出并做缓存，用于解决浏览器引用大量 js,css 文件时过多的网络连接。
+资源整合服务，可将多个分散在不同服务器，不同访问协议的 js,css,image 文件做打包输出并做缓存，用于解决浏览器引用大量 js,css,image 文件时过多的网络连接。
 
 
 ##  白名单
@@ -36,6 +36,33 @@
 
 
 `http[s]://domain.com/js?rc=http://src1.com/a.js,https://src1.com/b.js`
+
+
+## 图片整合输出 CSS Sprite 接口
+
+接收多个源图片参数，并将图片合并成一个大的图片输出，同时输出 css 样式表,可以直接使用。
+
+`[GET] /scss?rc=<resources....>`  输出 css 样式
+
+使用范例:
+
+```
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<html>
+	<head>
+		<link href="http://127.0.0.1:9000/scss?rc=i1:ShimoIcon.png,i1:icon_back@2x.png,i1:icon_circle.png,i1:icon_closed.png,i1:icon_downblack.png,i1:icon_liuliang@2x.png,i1:icon_right.png,i1:icon_select.png,i1:check@2x.png,i1:icon_chongzhi@2x.png,i1:icon_circle2.png,i1:icon_down.png,i1:icon_list.png,i1:icon_record@2x.png,i1:icon_search@2x.png,i1:icon_up.png" rel="stylesheet" type="text/css"/>
+	</head>
+	<body style="background-color:#FFFFFF">
+		<div id="ShimoIcon_png"></div>
+		<div id="check_2x_png"></div>
+		<div id="icon_back_2x_png"></div>
+		<div id="icon_chongzhi_2x_png"></div>
+		<div id="icon_circle_png"></div>
+		<div id="icon_record_2x_png"></div>
+	</body>
+</html>
+
+```
 
 
 ## 强制更新缓存接口

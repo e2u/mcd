@@ -108,6 +108,10 @@ func main() {
 	r.HandleFunc("/update", c.UpdateHandler).Methods("GET", "POST")
 	r.HandleFunc("/tags", c.Tags)
 
+	r.HandleFunc("/scss", c.CSSSpriteHandler).Methods("GET", "POST", "HEAD", "OPTIONS")
+	r.HandleFunc("/scss-image", c.CSSSpriteImageHandler).Methods("GET", "POST", "HEAD", "OPTIONS")
+	r.HandleFunc("/scss-review", c.CSSSpriteReviewHandler).Methods("GET", "POST", "HEAD", "OPTIONS")
+
 	n.UseHandler(r)
 
 	srv := &http.Server{

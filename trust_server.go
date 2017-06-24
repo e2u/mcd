@@ -3,16 +3,8 @@ package main
 import (
 	"fmt"
 	"net/url"
-	"regexp"
 	"strings"
 	"sync"
-)
-
-var (
-	// 路径清洗正则
-	prefixRegexp = regexp.MustCompile(`^[a-zA-Z0-9_]`)
-	dotRegexp    = regexp.MustCompile(`\.{2,}`)
-	slashRegexp  = regexp.MustCompile(`/{2,}`)
 )
 
 // 信任服务器列表,用于缩短源文件的访问路径
@@ -58,12 +50,7 @@ func (t *TrustServer) GetByShort(su string) string {
 		pu = pu[:len(pu)-1]
 	}
 
-	// 做路径清洗
-	path = dotRegexp.ReplaceAllString(path, ".")
-	path = slashRegexp.ReplaceAllString(path, "/")
-	for !prefixRegexp.MatchString(path) {
-		path = path[1:]
-	}
+	path = cleanPrefixPath(path)
 
 	if u, err := url.Parse(fmt.Sprintf("%s/%s", pu, path)); err == nil {
 		return u.String()
