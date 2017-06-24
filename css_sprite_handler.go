@@ -22,6 +22,9 @@ import (
 
 var (
 	csssReType = []string{".png", ".jpg", ".jpeg", ".gif"} // 支持的原始图片扩展名
+	// 避免 key 相同生成的缓存冲突
+	cacheCSSSuffix = ",css"
+	cachePNGSuffix = ",png"
 )
 
 // 生成 scss
@@ -42,7 +45,7 @@ func (c *Controller) CSSSpriteHandler(w http.ResponseWriter, r *http.Request) {
 
 	// 尝试读取已经生成的 css 输出
 	orrs := strings.Join(rs, ",")
-	if oc, err := Cache.Get(orrs + ",css"); err == nil && oc != nil {
+	if oc, err := Cache.Get(orrs + cacheCSSSuffix); err == nil && oc != nil {
 		goboot.Log.Debugf("merged cache: %v", orrs)
 		headerOutput(w, oc.CreatedAt)
 		io.Copy(w, bytes.NewReader(oc.Object))
@@ -91,10 +94,8 @@ func (c *Controller) CSSSpriteHandler(w http.ResponseWriter, r *http.Request) {
 
 	outCSSStr := strings.Join(outCSS, "")
 
-	io.Copy(w, strings.NewReader(outCSSStr))
-
 	if err := png.Encode(outBuf, simg); err == nil {
-		Cache.Set(orrs+",png", &cache.CacheObject{
+		Cache.Set(orrs+cachePNGSuffix, &cache.CacheObject{
 			CreatedAt: time.Now(),
 			Length:    uint64(outBuf.Len()),
 			MD5Hash:   md5.Sum(outBuf.Bytes()),
@@ -103,13 +104,15 @@ func (c *Controller) CSSSpriteHandler(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
-	Cache.Set(orrs+",css", &cache.CacheObject{
+	Cache.Set(orrs+cacheCSSSuffix, &cache.CacheObject{
 		CreatedAt: time.Now(),
 		Length:    uint64(len(outCSSStr)),
 		MD5Hash:   md5.Sum([]byte(outCSSStr)),
 		Object:    []byte(outCSSStr),
 		Source:    orrs,
 	})
+
+	io.Copy(w, strings.NewReader(outCSSStr))
 
 }
 
@@ -129,7 +132,7 @@ func (c *Controller) CSSSpriteImageHandler(w http.ResponseWriter, r *http.Reques
 
 	// 尝试读取整合大图输出
 	orrs := strings.Join(rs, ",")
-	if oc, err := Cache.Get(orrs); err == nil && oc != nil {
+	if oc, err := Cache.Get(orrs + cachePNGSuffix); err == nil && oc != nil {
 		goboot.Log.Debugf("merged cache: %v", orrs)
 		headerOutput(w, oc.CreatedAt)
 		io.Copy(w, bytes.NewReader(oc.Object))
