@@ -51,7 +51,10 @@ func (c *Controller) UpdateHandler(w http.ResponseWriter, r *http.Request) {
 		return false
 	})
 
-	go Cache.Delete(strings.Join(rs, ","))
+	orrs := strings.Join(rs, ",")
+	go Cache.Delete(orrs)
+	go Cache.Delete(orrs + cacheCSSSuffix)
+	go Cache.Delete(orrs + cachePNGSuffix)
 
 	for _, r := range rs {
 		go Cache.Delete(r)
