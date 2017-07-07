@@ -86,13 +86,14 @@ func (c *Controller) CSSSpriteHandler(w http.ResponseWriter, r *http.Request) {
 	}()
 
 	var outCSS []string
+	outCSS = append(outCSS, fmt.Sprintf(".mcd-scss {background: url('%s') no-repeat top left;background-size: %srem auto;}", spriteImageFullUrl, px2rem(iw)))
 	for _, si := range sis {
 		draw.Draw(simg, simg.Bounds().Add(image.Point{0, nextY}), si.Image, image.Point{0, 0}, draw.Src)
 		outCSS = append(outCSS, genCss(si, nextY, spriteImageFullUrl))
 		nextY += si.Height
 	}
 
-	outCSSStr := strings.Join(outCSS, "")
+	outCSSStr := strings.Join(outCSS, "\n")
 
 	if err := png.Encode(outBuf, simg); err == nil {
 		Cache.Set(orrs+cachePNGSuffix, &cache.CacheObject{
@@ -170,5 +171,10 @@ func genCss(si *SpriteImage, nextY int, fullUrl string) string {
 		}
 		return string(s)
 	}()
-	return fmt.Sprintf(`#%s{width: %dpx; height: %dpx; background: url('%s') no-repeat 0px -%dpx;}`, fn, si.Width, si.Height, fullUrl, nextY)
+	return fmt.Sprintf(".%s{width: %srem; height: %srem; background-position: 0 -%srem;}", fn, px2rem(si.Width), px2rem(si.Height), px2rem(nextY))
+}
+
+// px 转 rem
+func px2rem(px int) string {
+	return fmt.Sprintf("%.2f", float64(px)*0.01)
 }

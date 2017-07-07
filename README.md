@@ -53,12 +53,12 @@
 		<link href="http://127.0.0.1:9000/scss?rc=i1:ShimoIcon.png,i1:icon_back@2x.png,i1:icon_circle.png,i1:icon_closed.png,i1:icon_downblack.png,i1:icon_liuliang@2x.png,i1:icon_right.png,i1:icon_select.png,i1:check@2x.png,i1:icon_chongzhi@2x.png,i1:icon_circle2.png,i1:icon_down.png,i1:icon_list.png,i1:icon_record@2x.png,i1:icon_search@2x.png,i1:icon_up.png" rel="stylesheet" type="text/css"/>
 	</head>
 	<body style="background-color:#FFFFFF">
-		<div id="ShimoIcon_png"></div>
-		<div id="check_2x_png"></div>
-		<div id="icon_back_2x_png"></div>
-		<div id="icon_chongzhi_2x_png"></div>
-		<div id="icon_circle_png"></div>
-		<div id="icon_record_2x_png"></div>
+		<div class="mcd-scss ShimoIcon_png"></div>
+		<div class="mcd-scss check_2x_png"></div>
+		<div class="mcd-scss icon_back_2x_png"></div>
+		<div class="mcd-scss icon_chongzhi_2x_png"></div>
+		<div class="mcd-scss icon_circle_png"></div>
+		<div class="mcd-scss icon_record_2x_png"></div>
 	</body>
 </html>
 

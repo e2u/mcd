@@ -7,3 +7,6 @@
 2017-06-24
 - [feature] 添加图片整合接口 css sprite
 - [feature] 配置文件添加 site.base 项
+
+2017-07-05
+- [feature] css sprite 生成的 css 修改成 'class'
