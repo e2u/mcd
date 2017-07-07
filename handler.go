@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -51,12 +53,26 @@ func (c *Controller) UpdateHandler(w http.ResponseWriter, r *http.Request) {
 		return false
 	})
 
+	func(_rs []string) { // 这个不要起 gorouting 运行
+		sort.Strings(_rs)
+		Cache.Delete(strings.Join(rs, ",") + cachePNGSuffix)
+	}(rs)
+
+	scale := r.FormValue("scale")
+	if scale == "" {
+		scale = strconv.Itoa(DefaultScale)
+	}
+	rs = append(rs, fmt.Sprintf("$%s$", scale))
+	sort.Strings(rs)
+
 	orrs := strings.Join(rs, ",")
 	go Cache.Delete(orrs)
 	go Cache.Delete(orrs + cacheCSSSuffix)
-	go Cache.Delete(orrs + cachePNGSuffix)
 
 	for _, r := range rs {
+		if strings.HasPrefix(r, "$") { // 跳过图片比例
+			continue
+		}
 		go Cache.Delete(r)
 	}
 	w.Write([]byte("OK"))

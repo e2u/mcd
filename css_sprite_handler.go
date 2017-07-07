@@ -13,11 +13,16 @@ import (
 	"net/http"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/e2u/goboot"
 	"github.com/e2u/mcd/cache"
+)
+
+const (
+	DefaultScale = 100
 )
 
 var (
@@ -31,11 +36,30 @@ var (
 func (c *Controller) CSSSpriteHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/css")
 
+	// 用于存储生成的 css 和 整合大图的 key
+	var cssCacheKey, pngCacheKey string
+
 	reqRc := r.FormValue("rc")
 	rs := preProcessRequestResources(strings.Split(reqRc, ","), func /*skip*/ (v string) bool {
 		return !isInArray(csssReType, filepath.Ext(v))
 	})
-	sort.Strings(rs)
+
+	scale := r.FormValue("scale")
+	if scale == "" {
+		scale = strconv.Itoa(DefaultScale)
+	}
+
+	pngCacheKey = func(_rs []string) string {
+		sort.Strings(_rs)
+		return fmt.Sprintf("%s%s", strings.Join(_rs, ","), cachePNGSuffix)
+	}(rs)
+
+	// 图片的基准比例,默认 100
+	cssCacheKey = func(_rs []string) string {
+		_rs = append(_rs, fmt.Sprintf("$%s$", scale))
+		sort.Strings(_rs)
+		return fmt.Sprintf("%s%s", strings.Join(_rs, ","), cacheCSSSuffix)
+	}(rs)
 
 	headerOutput := func(w http.ResponseWriter, ti time.Time) {
 		w.Header().Set("Cache-Control", "max-age:1296000, public")
@@ -44,9 +68,8 @@ func (c *Controller) CSSSpriteHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 尝试读取已经生成的 css 输出
-	orrs := strings.Join(rs, ",")
-	if oc, err := Cache.Get(orrs + cacheCSSSuffix); err == nil && oc != nil {
-		goboot.Log.Debugf("merged cache: %v", orrs)
+	if oc, err := Cache.Get(cssCacheKey); err == nil && oc != nil {
+		goboot.Log.Debugf("merged cache: %v", cssCacheKey)
 		headerOutput(w, oc.CreatedAt)
 		io.Copy(w, bytes.NewReader(oc.Object))
 		return
@@ -55,6 +78,10 @@ func (c *Controller) CSSSpriteHandler(w http.ResponseWriter, r *http.Request) {
 	var sis []*SpriteImage
 
 	for _, rc := range rs {
+		if strings.HasPrefix(rc, "$") { // 跳过图片比例
+			continue
+		}
+		fmt.Println(rc)
 		oc, err := getResource(rc)
 		if err != nil {
 			goboot.Log.Errorf("get resources error: %v", err.Error())
@@ -82,35 +109,35 @@ func (c *Controller) CSSSpriteHandler(w http.ResponseWriter, r *http.Request) {
 
 	spriteImageFullUrl := func() string {
 		siteBase := goboot.Config.MustString("site.base", "http://127.0.0.1:9000")
-		return fmt.Sprintf("%s/scss-image?rc=%s", siteBase, reqRc)
+		return fmt.Sprintf("%s/scss-image?rc=%s&scale=%s", siteBase, reqRc)
 	}()
 
 	var outCSS []string
-	outCSS = append(outCSS, fmt.Sprintf(".mcd-scss {background: url('%s') no-repeat top left;background-size: %srem auto;}", spriteImageFullUrl, px2rem(iw)))
+	outCSS = append(outCSS, fmt.Sprintf(".mcd-scss {background: url('%s') no-repeat top left;background-size: %srem auto;}", spriteImageFullUrl, px2rem(iw, scale)))
 	for _, si := range sis {
 		draw.Draw(simg, simg.Bounds().Add(image.Point{0, nextY}), si.Image, image.Point{0, 0}, draw.Src)
-		outCSS = append(outCSS, genCss(si, nextY, spriteImageFullUrl))
+		outCSS = append(outCSS, genCss(si, nextY, scale))
 		nextY += si.Height
 	}
 
 	outCSSStr := strings.Join(outCSS, "\n")
 
 	if err := png.Encode(outBuf, simg); err == nil {
-		Cache.Set(orrs+cachePNGSuffix, &cache.CacheObject{
+		Cache.Set(pngCacheKey, &cache.CacheObject{
 			CreatedAt: time.Now(),
 			Length:    uint64(outBuf.Len()),
 			MD5Hash:   md5.Sum(outBuf.Bytes()),
 			Object:    outBuf.Bytes(),
-			Source:    orrs,
+			Source:    pngCacheKey,
 		})
 	}
 
-	Cache.Set(orrs+cacheCSSSuffix, &cache.CacheObject{
+	Cache.Set(cssCacheKey, &cache.CacheObject{
 		CreatedAt: time.Now(),
 		Length:    uint64(len(outCSSStr)),
 		MD5Hash:   md5.Sum([]byte(outCSSStr)),
 		Object:    []byte(outCSSStr),
-		Source:    orrs,
+		Source:    pngCacheKey,
 	})
 
 	io.Copy(w, strings.NewReader(outCSSStr))
@@ -119,10 +146,13 @@ func (c *Controller) CSSSpriteHandler(w http.ResponseWriter, r *http.Request) {
 
 // 生成 scss 引用的图片
 func (c *Controller) CSSSpriteImageHandler(w http.ResponseWriter, r *http.Request) {
-	rs := preProcessRequestResources(strings.Split(r.FormValue("rc"), ","), func /*skip*/ (v string) bool {
+
+	reqRc := r.FormValue("rc")
+	rs := preProcessRequestResources(strings.Split(reqRc, ","), func /*skip*/ (v string) bool {
 		return !isInArray(csssReType, filepath.Ext(v))
 	})
 	sort.Strings(rs)
+	orrs := strings.Join(rs, ",")
 
 	headerOutput := func(w http.ResponseWriter, ti time.Time) {
 		w.Header().Set("Content-Type", "image/png")
@@ -132,7 +162,6 @@ func (c *Controller) CSSSpriteImageHandler(w http.ResponseWriter, r *http.Reques
 	}
 
 	// 尝试读取整合大图输出
-	orrs := strings.Join(rs, ",")
 	if oc, err := Cache.Get(orrs + cachePNGSuffix); err == nil && oc != nil {
 		goboot.Log.Debugf("merged cache: %v", orrs)
 		headerOutput(w, oc.CreatedAt)
@@ -163,7 +192,7 @@ func calculateImageDimension(sis []*SpriteImage) (int, int) {
 }
 
 // 生成 css
-func genCss(si *SpriteImage, nextY int, fullUrl string) string {
+func genCss(si *SpriteImage, nextY int, scale string) string {
 	fn := func() string {
 		s := filepath.Base(si.FileName)
 		for _, b := range cssKeyWork {
@@ -171,10 +200,14 @@ func genCss(si *SpriteImage, nextY int, fullUrl string) string {
 		}
 		return string(s)
 	}()
-	return fmt.Sprintf(".%s{width: %srem; height: %srem; background-position: 0 -%srem;}", fn, px2rem(si.Width), px2rem(si.Height), px2rem(nextY))
+	return fmt.Sprintf(".%s{width: %srem; height: %srem; background-position: 0 -%srem;}", fn, px2rem(si.Width, scale), px2rem(si.Height, scale), px2rem(nextY, scale))
 }
 
 // px 转 rem
-func px2rem(px int) string {
-	return fmt.Sprintf("%.2f", float64(px)*0.01)
+func px2rem(px int, scale string) string {
+	sf, err := strconv.ParseFloat(scale, 64)
+	if err != nil {
+		sf = DefaultScale
+	}
+	return fmt.Sprintf("%.2f", float64(px)/sf)
 }

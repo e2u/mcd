@@ -42,34 +42,65 @@
 
 接收多个源图片参数，并将图片合并成一个大的图片输出，同时输出 css 样式表,可以直接使用。
 
-`[GET] /scss?rc=<resources....>`  输出 css 样式
+`[GET] /scss?rc=<resources....>&scale=100`  输出 css 样式
+
+**参数:**
+	* rs: 需要整合的资源列表
+	* scale: 生成css的缩放比例,默认100,生成的 css 中图片的尺寸(rem)根据输入的 scale 参数做响应的缩放处理。
 
 使用范例:
 
 ```
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<!DOCTYPE html>
 <html>
-	<head>
-		<link href="http://127.0.0.1:9000/scss?rc=i1:ShimoIcon.png,i1:icon_back@2x.png,i1:icon_circle.png,i1:icon_closed.png,i1:icon_downblack.png,i1:icon_liuliang@2x.png,i1:icon_right.png,i1:icon_select.png,i1:check@2x.png,i1:icon_chongzhi@2x.png,i1:icon_circle2.png,i1:icon_down.png,i1:icon_list.png,i1:icon_record@2x.png,i1:icon_search@2x.png,i1:icon_up.png" rel="stylesheet" type="text/css"/>
-	</head>
-	<body style="background-color:#FFFFFF">
-		<div class="mcd-scss ShimoIcon_png"></div>
-		<div class="mcd-scss check_2x_png"></div>
-		<div class="mcd-scss icon_back_2x_png"></div>
-		<div class="mcd-scss icon_chongzhi_2x_png"></div>
-		<div class="mcd-scss icon_circle_png"></div>
-		<div class="mcd-scss icon_record_2x_png"></div>
-	</body>
+    <head>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0,minimum-scale=1.0,user-scalable=0">
+        <link href="http://127.0.0.1:9000/scss?r=aaaa&rc=i1:ShimoIcon.png,i1:icon_back@2x.png,i1:icon_circle.png,i1:icon_closed.png,i1:icon_downblack.png,i1:icon_liuliang@2x.png,i1:icon_right.png,i1:icon_select.png,i1:check@2x.png,i1:icon_chongzhi@2x.png,i1:icon_circle2.png,i1:icon_down.png,i1:icon_list.png,i1:icon_record@2x.png,i1:icon_search@2x.png,i1:icon_up.png&scale=60" rel="stylesheet" type="text/css"/>
+				<script type="text/javascript" src="rem_750.js"></script>
+    </head>
+    <body style="background-color:#FFFFFF">
+			hello
+        <div class="mcd-scss ShimoIcon_png"></div>
+        <div class="mcd-scss check_2x_png"></div>
+        <div class="mcd-scss icon_back_2x_png"></div>
+        <div class="mcd-scss icon_chongzhi_2x_png"></div>
+        <div class="mcd-scss icon_circle_png"></div>
+        <div class="mcd-scss icon_record_2x_png"></div>
+    </body>
 </html>
+```
+
+**rem_750.js"
+```
+/* fix the code flash the page  */
+var globalWidth = document.documentElement.clientWidth;//window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
+var radixNO = 100/750*globalWidth;
+document.documentElement.style.fontSize = radixNO + 'px';
+/* fit document fit the screen, get the radix */
+(function (doc, win) {
+    var docEl = doc.documentElement,
+            resizeEvt = 'orientationchange' in window ? 'orientationchange' : 'resize',
+            recalc = function () {
+                var globalWidth = window.innerWidth;// for judge the screen ??
+                var clientWidth = docEl.clientWidth;
+                if (!clientWidth) return;
+                docEl.style.fontSize = 100 * (clientWidth / 750) + 'px';
+            };
+    if (!doc.addEventListener) return;
+    win.addEventListener(resizeEvt, recalc, false);
+    doc.addEventListener('DOMContentLoaded', recalc, false);
+})(document, window);
 
 ```
+
+
 
 
 ## 强制更新缓存接口
 
 本服务不会主动检查原始资源的更新，如已缓存的原始资源发生了变化，需要调用本接口做强制更新
 
-`[GET|POST|HEAD] /update?rc=<resources.....>`
+`[GET|POST|HEAD] /update?rc=<resources.....>&scale=100`
 
 强制更新接口可以同时更新多个不同类型的资源
 
