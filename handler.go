@@ -53,6 +53,10 @@ func (c *Controller) UpdateHandler(w http.ResponseWriter, r *http.Request) {
 		return false
 	})
 
+	// 删除合并后的资源缓存
+	go Cache.Delete(strings.Join(rs, ","))
+    
+	// 逐一删除原始资源缓存
 	func(_rs []string) { // 这个不要起 gorouting 运行
 		sort.Strings(_rs)
 		Cache.Delete(strings.Join(rs, ",") + cachePNGSuffix)

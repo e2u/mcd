@@ -7,6 +7,8 @@ import (
 	"os"
 	"path/filepath"
 	"sync"
+
+	"github.com/e2u/goboot"
 )
 
 type FileStorage struct {
@@ -56,6 +58,7 @@ func (fs *FileStorage) Get(key string) (*CacheObject, error) {
 }
 
 func (fs *FileStorage) Set(key string, oc *CacheObject) error {
+	goboot.Log.Debugf("Set %s", key)
 	fs.Lock()
 	defer fs.Unlock()
 	fullpath := fs.fullPath(key)
@@ -73,6 +76,7 @@ func (fs *FileStorage) Set(key string, oc *CacheObject) error {
 }
 
 func (fs *FileStorage) Delete(key string) error {
+	goboot.Log.Debugf("Delete %s", key)
 	fs.Lock()
 	defer fs.Unlock()
 	fullpath := fs.fullPath(key)
